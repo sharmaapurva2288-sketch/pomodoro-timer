@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro — Focus in Slices</title>
+<style>
+  :root{
+    --vine:#2f4a3c;
+    --vine-dark:#1e3129;
+    --tomato:#e85f4c;
+    --tomato-dark:#c94a38;
+    --cream:#faf3e8;
+    --seed:#f6d9a0;
+    --ink:#22291f;
+    --line: rgba(34,41,31,0.12);
+    --ring-size: min(62vw, 340px);
+  }
+
+  *{ box-sizing:border-box; }
+
+  @font-face{
+    font-family:'system-serif';
+    src:local('Georgia');
+  }
+
+  html,body{
+    margin:0;
+    min-height:100%;
+    background:var(--cream);
+    color:var(--ink);
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+
+  body{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:6vh 20px 40px;
+  }
+
+  .eyebrow{
+    font-size:12px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--vine);
+    font-weight:700;
+    margin-bottom:6px;
+  }
+
+  h1{
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight:700;
+    font-size: clamp(28px, 5vw, 42px);
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .tagline{
+    color: rgba(34,41,31,0.62);
+    font-size:15px;
+    margin-bottom: 42px;
+    text-align:center;
+    max-width: 420px;
+  }
+
+  /* Mode switch — vine leaves */
+  .modes{
+    display:flex;
+    gap:8px;
+    background: rgba(47,74,60,0.07);
+    padding:5px;
+    border-radius:999px;
+    margin-bottom: 40px;
+  }
+  .mode-btn{
+    border:none;
+    background:transparent;
+    padding:9px 18px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.02em;
+    color: rgba(34,41,31,0.55);
+    cursor:pointer;
+    transition: background .25s ease, color .25s ease;
+  }
+  .mode-btn.active{
+    background: var(--vine);
+    color: var(--cream);
+  }
+
+  /* The tomato-slice dial */
+  .dial-wrap{
+    position:relative;
+    width: var(--ring-size);
+    height: var(--ring-size);
+    margin-bottom: 44px;
+  }
+
+  svg.dial{ width:100%; height:100%; transform: rotate(-90deg); display:block; }
+
+  .track{
+    fill:none;
+    stroke: rgba(47,74,60,0.10);
+    stroke-width: 14;
+  }
+
+  .progress{
+    fill:none;
+    stroke: var(--tomato);
+    stroke-width: 14;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke .3s ease;
+  }
+
+  /* seeds dotting the ring, tomato style */
+  .seed{
+    fill: var(--seed);
+    opacity: 0.9;
+  }
+
+  .dial-center{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+
+  .time{
+    font-family: Georgia, serif;
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(48px, 11vw, 72px);
+    font-weight:700;
+    line-height:1;
+    letter-spacing: -0.02em;
+  }
+
+  .state-label{
+    margin-top:10px;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.16em;
+    font-weight:700;
+    color: var(--tomato-dark);
+  }
+
+  .round-count{
+    margin-top: 4px;
+    font-size:12px;
+    color: rgba(34,41,31,0.5);
+  }
+
+  /* Controls */
+  .controls{
+    display:flex;
+    gap:14px;
+    align-items:center;
+  }
+
+  .btn{
+    border:none;
+    cursor:pointer;
+    font-family:inherit;
+    font-weight:700;
+    letter-spacing:.02em;
+    transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
+  }
+  .btn:active{ transform: scale(0.96); }
+  .btn:focus-visible{
+    outline: 3px solid var(--vine);
+    outline-offset: 3px;
+  }
+
+  .btn-primary{
+    background: var(--tomato);
+    color: var(--cream);
+    font-size:15px;
+    padding: 16px 40px;
+    border-radius: 999px;
+    box-shadow: 0 8px 20px rgba(232,95,76,0.35);
+  }
+  .btn-primary:hover{ background: var(--tomato-dark); }
+
+  .btn-ghost{
+    background: transparent;
+    border: 1.5px solid var(--line);
+    color: var(--vine);
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+  }
+  .btn-ghost:hover{ border-color: var(--vine); background: rgba(47,74,60,0.06); }
+
+  /* Settings row */
+  .settings{
+    margin-top: 46px;
+    display:flex;
+    gap:28px;
+    flex-wrap:wrap;
+    justify-content:center;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+    width:100%;
+    max-width: 420px;
+  }
+  .setting{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+  .setting label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color: rgba(34,41,31,0.5);
+    font-weight:700;
+  }
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .stepper button{
+    background: rgba(47,74,60,0.08);
+    border:none;
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    font-size:15px;
+    font-weight:700;
+    color: var(--vine);
+    cursor:pointer;
+  }
+  .stepper button:hover{ background: rgba(47,74,60,0.16); }
+  .stepper span{
+    min-width: 28px;
+    text-align:center;
+    font-weight:700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  footer{
+    margin-top: 40px;
+    font-size:12px;
+    color: rgba(34,41,31,0.4);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .progress{ transition:none; }
+    .btn{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>Pomodoro</h1>
+  <p class="tagline">"Focus is the art of knowing what to ignore." — start small, stay present.</p>
+
+  <div class="modes" role="tablist" aria-label="Timer mode">
+    <button class="mode-btn active" data-mode="focus" role="tab" aria-selected="true">Focus</button>
+    <button class="mode-btn" data-mode="short" role="tab" aria-selected="false">Short Break</button>
+    <button class="mode-btn" data-mode="long" role="tab" aria-selected="false">Long Break</button>
+  </div>
+
+  <div class="dial-wrap">
+    <svg class="dial" viewBox="0 0 200 200">
+      <circle class="track" cx="100" cy="100" r="88"></circle>
+      <circle id="progressRing" class="progress" cx="100" cy="100" r="88"></circle>
+    </svg>
+    <div class="dial-center">
+      <div class="time" id="timeDisplay">25:00</div>
+      <div class="state-label" id="stateLabel">Focus Time</div>
+      <div class="round-count" id="roundCount">Slice 1</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-ghost" id="resetBtn" title="Reset" aria-label="Reset timer">↺</button>
+    <button class="btn btn-primary" id="startBtn">Start</button>
+    <button class="btn btn-ghost" id="skipBtn" title="Skip" aria-label="Skip to next">→</button>
+  </div>
+
+  <div class="settings">
+    <div class="setting">
+      <label>Focus (min)</label>
+      <div class="stepper">
+        <button data-target="focus" data-delta="-1">−</button>
+        <span id="focusVal">25</span>
+        <button data-target="focus" data-delta="1">+</button>
+      </div>
+    </div>
+    <div class="setting">
+      <label>Short Break</label>
+      <div class="stepper">
+        <button data-target="short" data-delta="-1">−</button>
+        <span id="shortVal">5</span>
+        <button data-target="short" data-delta="1">+</button>
+      </div>
+    </div>
+    <div class="setting">
+      <label>Long Break</label>
+      <div class="stepper">
+        <button data-target="long" data-delta="-1">−</button>
+        <span id="longVal">15</span>
+        <button data-target="long" data-delta="1">+</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Four focus slices make one full round.</footer>
+
+<script>
+(function(){
+  // ---- settings (minutes) ----
+  const durations = { focus: 25, short: 5, long: 15 };
+
+  const RADIUS = 88;
+  const CIRC = 2 * Math.PI * RADIUS;
+  const ring = document.getElementById('progressRing');
+  ring.style.strokeDasharray = CIRC;
+  ring.style.strokeDashoffset = 0;
+
+  const modeColors = { focus: '#e85f4c', short: '#2f4a3c', long: '#3d6b53' };
+  const modeLabels = { focus: 'Focus Time', short: 'Short Break', long: 'Long Break' };
+
+  let mode = 'focus';
+  let secondsLeft = durations[mode] * 60;
+  let totalSeconds = durations[mode] * 60;
+  let timerId = null;
+  let running = false;
+  let focusRound = 1; // 1-4, cycles
+
+  const timeDisplay = document.getElementById('timeDisplay');
+  const stateLabel = document.getElementById('stateLabel');
+  const roundCount = document.getElementById('roundCount');
+  const startBtn = document.getElementById('startBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const skipBtn = document.getElementById('skipBtn');
+  const modeBtns = document.querySelectorAll('.mode-btn');
+
+  function formatTime(s){
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = (s % 60).toString().padStart(2, '0');
+    return m + ':' + sec;
+  }
+
+  function updateDisplay(){
+    timeDisplay.textContent = formatTime(secondsLeft);
+    stateLabel.textContent = modeLabels[mode];
+    roundCount.textContent = mode === 'focus' ? ('Slice ' + focusRound + ' of 4') : 'Between Slices';
+    const fraction = 1 - (secondsLeft / totalSeconds);
+    ring.style.strokeDashoffset = CIRC * (1 - fraction);
+    ring.style.stroke = modeColors[mode];
+    document.title = formatTime(secondsLeft) + ' — ' + modeLabels[mode];
+  }
+
+  function setMode(newMode, resetRound){
+    mode = newMode;
+    totalSeconds = durations[mode] * 60;
+    secondsLeft = totalSeconds;
+    modeBtns.forEach(b => {
+      const isActive = b.dataset.mode === mode;
+      b.classList.toggle('active', isActive);
+      b.setAttribute('aria-selected', isActive);
+    });
+    updateDisplay();
+  }
+
+  function tick(){
+    secondsLeft--;
+    if (secondsLeft < 0){
+      advance();
+      return;
+    }
+    updateDisplay();
+  }
+
+  function advance(){
+    if (mode === 'focus'){
+      if (focusRound >= 4){
+        focusRound = 1;
+        setMode('long');
+      } else {
+        focusRound++;
+        setMode('short');
+      }
+    } else {
+      setMode('focus');
+    }
+    // auto-continue into the next slice
+    startTimer();
+  }
+
+  function startTimer(){
+    running = true;
+    startBtn.textContent = 'Pause';
+    timerId = setInterval(tick, 1000);
+  }
+
+  function pauseTimer(){
+    running = false;
+    startBtn.textContent = 'Start';
+    clearInterval(timerId);
+  }
+
+  function toggleTimer(){
+    if (running){ pauseTimer(); } else { startTimer(); }
+  }
+
+  function resetTimer(){
+    pauseTimer();
+    secondsLeft = totalSeconds;
+    updateDisplay();
+  }
+
+  startBtn.addEventListener('click', toggleTimer);
+  resetBtn.addEventListener('click', resetTimer);
+  skipBtn.addEventListener('click', () => { pauseTimer(); advance(); pauseTimer(); });
+
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      pauseTimer();
+      focusRound = 1;
+      setMode(btn.dataset.mode);
+    });
+  });
+
+  // stepper controls for durations
+  document.querySelectorAll('.stepper button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.target;
+      const delta = parseInt(btn.dataset.delta, 10);
+      let val = durations[target] + delta;
+      val = Math.max(1, Math.min(90, val));
+      durations[target] = val;
+      document.getElementById(target + 'Val').textContent = val;
+      if (target === mode && !running){
+        totalSeconds = val * 60;
+        secondsLeft = totalSeconds;
+        updateDisplay();
+      }
+    });
+  });
+
+  updateDisplay();
+})();
+</script>
+
+</body>
+</html>
