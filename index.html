@@ -17,7 +17,14 @@
     --ring-size: min(62vw, 340px);
   }
 
-  *{ box-sizing:border-box; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+  button{
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
 
   @font-face{
     font-family:'system-serif';
@@ -266,9 +273,9 @@
   <p class="tagline">"Focus is the art of knowing what to ignore." — start small, stay present.</p>
 
   <div class="modes" role="tablist" aria-label="Timer mode">
-    <button class="mode-btn active" data-mode="focus" role="tab" aria-selected="true">Focus</button>
-    <button class="mode-btn" data-mode="short" role="tab" aria-selected="false">Short Break</button>
-    <button class="mode-btn" data-mode="long" role="tab" aria-selected="false">Long Break</button>
+    <button type="button" class="mode-btn active" data-mode="focus" role="tab" aria-selected="true">Focus</button>
+    <button type="button" class="mode-btn" data-mode="short" role="tab" aria-selected="false">Short Break</button>
+    <button type="button" class="mode-btn" data-mode="long" role="tab" aria-selected="false">Long Break</button>
   </div>
 
   <div class="dial-wrap">
@@ -284,34 +291,34 @@
   </div>
 
   <div class="controls">
-    <button class="btn btn-ghost" id="resetBtn" title="Reset" aria-label="Reset timer">↺</button>
-    <button class="btn btn-primary" id="startBtn">Start</button>
-    <button class="btn btn-ghost" id="skipBtn" title="Skip" aria-label="Skip to next">→</button>
+    <button type="button" class="btn btn-ghost" id="resetBtn" title="Reset" aria-label="Reset timer">↺</button>
+    <button type="button" class="btn btn-primary" id="startBtn">Start</button>
+    <button type="button" class="btn btn-ghost" id="skipBtn" title="Skip" aria-label="Skip to next">→</button>
   </div>
 
   <div class="settings">
     <div class="setting">
       <label>Focus (min)</label>
       <div class="stepper">
-        <button data-target="focus" data-delta="-1">−</button>
+        <button type="button" data-target="focus" data-delta="-1">−</button>
         <span id="focusVal">25</span>
-        <button data-target="focus" data-delta="1">+</button>
+        <button type="button" data-target="focus" data-delta="1">+</button>
       </div>
     </div>
     <div class="setting">
       <label>Short Break</label>
       <div class="stepper">
-        <button data-target="short" data-delta="-1">−</button>
+        <button type="button" data-target="short" data-delta="-1">−</button>
         <span id="shortVal">5</span>
-        <button data-target="short" data-delta="1">+</button>
+        <button type="button" data-target="short" data-delta="1">+</button>
       </div>
     </div>
     <div class="setting">
       <label>Long Break</label>
       <div class="stepper">
-        <button data-target="long" data-delta="-1">−</button>
+        <button type="button" data-target="long" data-delta="-1">−</button>
         <span id="longVal">15</span>
-        <button data-target="long" data-delta="1">+</button>
+        <button type="button" data-target="long" data-delta="1">+</button>
       </div>
     </div>
   </div>
